@@ -12,4 +12,11 @@ Team F([csehydrogen](https://github.com/csehydrogen), [cseteram](https://github.
 
 ## Features
 
-Nothing yet.
+* Streaming a MPEG-2 TS file
+* Trick play (an index file should be created in advance)
+
+## Test set
+
+* Download an example H.265 Video ES file from [here](http://www.live555.com/liveMedia/public/265/surfing.265).
+* Make a MPEG-2 TS file using live555/testProgs/testH265VideoToTransportStream.
+* Make an index file using live555/testProgs/MPEG2TransportStreamIndexer.
