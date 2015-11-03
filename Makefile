@@ -5,7 +5,7 @@ COMPILER = c++
 COMPILE = $(COMPILER) $(COMPILE_OPTS)
 
 LIB_DIR = /usr/local/lib
-LIBS = -lBasicUsageEnvironment -lUsageEnvironment -lgroupsock -lliveMedia
+LIBS = -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment
 LINK = c++
 
 KimchiMediaServer : KimchiMediaServer.o
