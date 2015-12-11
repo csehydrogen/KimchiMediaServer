@@ -1,0 +1,5 @@
+TEARDOWN rtsp://192.168.0.64:8554/surfing.ts/ RTSP/1.0
+CSeq: 9
+User-Agent: LibVLC/2.2.1 (LIVE555 Streaming Media v2014.07.25)
+Session: 8C9DBA10
+
