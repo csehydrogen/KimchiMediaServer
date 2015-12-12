@@ -23,4 +23,6 @@ public:
     void setDstIPAddress(std::string _dstIPAddress, std::string _serverPort);
     void setSession(std::string _session);
     void setTimeout(std::string _timeout);
+
+    void printLog();
 };

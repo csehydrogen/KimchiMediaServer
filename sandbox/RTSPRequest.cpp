@@ -36,10 +36,11 @@ void RTSPRequest::setURL(char *ptr) {
             }
         }
     }
-    filepath = std::string(iter_st, iter_ed);
+    if(count<3) filepath="";
+    else filepath = std::string(iter_st, iter_ed);
 
     count=0;
-    std::string::iterator iter1, iter2;
+    std::string::iterator iter1, iter2 = url.end();
     for(auto iter = url.begin() ; iter != url.end() ; iter++) {
         if(*iter == '/') {
             count++;
@@ -162,7 +163,7 @@ std::string RTSPRequest::getSDPDescription() {
   sdpd += "a=tool:Kimchi Streaming Media\r\n";
   sdpd += "a=type:broadcast\r\n";
   sdpd += "a=control:*\r\n";
-  sdpd += "a=range:npt=0-x.xxx (TODO)\r\n"; // TODO : get maxRange from video file
+  sdpd += "a=range:npt=0-\r\n"; // TODO : get maxRange from video file
   // sdpd += "a=x-qt-text-nam:Session streamed by \"KimchiMediaServer\"\r\n";
   // sdpd += "a=x-qt-text-inf:" + filepath + "\r\n";
   sdpd += "m=video 0 RTP/AVP 33\r\n"; // payload type of TS files = 33
@@ -173,44 +174,19 @@ std::string RTSPRequest::getSDPDescription() {
   return sdpd;
 }
 
-/*
-
-int main() {
- 
-  RTSPRequest r;
-
-  for(int line=0 ; ; line++) 
-  {
-    fgets(buf,BUF_MAX-1,stdin);
-    int n = strlen(buf);
-    if(n<=2) break;
-
-    r.add_headers(buf);
-  }
-  printf(
-    "Method : %s\n"
-    "Request-URI : %s\n"
-    "RTSP-Version : %s\n"
-    "filepath : %s\n"
-    "source IPAddress : %s\n",
-    r.method.c_str(), r.request_URI.c_str(), r.RTSP_version.c_str(), r.filepath.c_str(), r.srcIPAddress.c_str());
+void RTSPRequest::printLog() {
+    printf(
+      "Method : %s\n"
+      "Request-URI : %s\n"
+      "RTSP-Version : %s\n"
+      "filepath : %s\n"
+      "source IPAddress : %s\n",
+      method.c_str(), url.c_str(), version.c_str(), filepath.c_str(), srcIPAddr.c_str());
   
-    std::map<std::string,std::string>::iterator iter;
-  for(iter=r.headers.begin() ; iter != r.headers.end() ; iter++) {
-    pair<std::string,std::string> pss = *iter;
-    printf("%s : %s\n", pss.first.c_str(), pss.second.c_str());
-  }
-
-
-  printf("\n=========================\n\n");
-
-  std::string response = r.getResponse();
-  printf("%s", response.c_str());
-
-  for(int i=0 ; i<response.length() ; i++) {
-    printf("%02x", response[i]);
-  }
-  printf("\n");
-  return 0;
+      printf("Headers info are below;\n");
+      auto iter = headers.begin();
+      for(iter=headers.begin() ; iter != headers.end() ; iter++) {
+        auto pss = *iter;
+        printf("%s : %s\n", pss.first.c_str(), pss.second.c_str());
+      }
 }
-*/
