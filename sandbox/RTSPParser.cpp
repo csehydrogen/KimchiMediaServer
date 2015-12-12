@@ -65,3 +65,27 @@ ssize_t RTSPParser::bufreadline(char *usrbuf, size_t maxlen) {
     *cur = 0;
     return n;
 }
+
+RTSPRequest* RTSPParser::parse() {
+    int n;
+    char line[1024], *ptr, *saveptr;
+    RTSPRequest *rtspRequest = new RTSPRequest();
+
+    n = bufreadline(line, sizeof(line));
+    ptr = strtok_r(line, " ", &saveptr);
+    rtspRequest->setMethod(ptr);
+    ptr = strtok_r(NULL, " ", &saveptr);
+    rtspRequest->setURL(ptr);
+    ptr = strtok_r(NULL, "\r", &saveptr);
+    rtspRequest->setVersion(ptr);
+
+    while (true) {
+        n = bufreadline(line, sizeof(line));
+        if (n <= 2) break; // TODO 주의 body가 존재할 수 있음
+        char *key = strtok_r(line, ":", &saveptr);
+        char *val = strtok_r(NULL, " \r", &saveptr);
+        rtspRequest->addHeaders(key, val);
+    }
+
+    return rtspRequest;
+}

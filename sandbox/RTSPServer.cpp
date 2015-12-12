@@ -1,5 +1,6 @@
 #include "RTSPServer.h"
 #include "RTSPParser.h"
+#include "RTSPRequest.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -64,13 +65,12 @@ void* RTSPServer::parseLoop(void *arg) {
         return NULL;
     }
 
-    // TODO parsing
-    char line[4096];
-    int n = rtspParser->bufreadline(line, sizeof(line));
-    printf("Thread %d\n", pthread_self());
-    write(STDOUT_FILENO, line, n);
-    printf("\n");
+    RTSPRequest *rtspRequest = rtspParser->parse();
 
+    std::string res = rtspRequest->getResponse();
+    write(STDOUT_FILENO, res.c_str(), res.length());
+
+    delete rtspRequest;
     delete rtspParser;
     return NULL;
 }
