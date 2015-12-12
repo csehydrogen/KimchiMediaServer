@@ -14,16 +14,25 @@ char buf[BUF_MAX];
 
 struct RTSPRequest {
   string method, request_URI, RTSP_version; // Request-Line
+  string filename, srcIPAddress;
   map<string,string> headers; // headers
-  string filename;
+
+  string session, timeout; // replace this line with session class
+  string dstIPAddress, serverPort; // for SETUP Response
 
   void add_headers(char *buf);
-  void setFilename();
   string getResponse();
 
   string getCreationTimeString();
-  string getIPAddress();
   string getSDPDescription();
+
+  void setDstIPAddress(string _dstIPAddress, string _serverPort);
+  void setSession(string _session);
+  void setTimeout(string _timeout);
+
+private:
+  void setFilename();
+  void setSrcIPAddress();
 };
 
 void RTSPRequest::add_headers(char *bufline) {
@@ -44,6 +53,7 @@ void RTSPRequest::add_headers(char *bufline) {
       else if(j==1) {
         request_URI = string(pch);
         setFilename();
+        setSrcIPAddress();
       }
       else RTSP_version = string(pch);
       pch = strtok(NULL, " \r\n");
@@ -79,8 +89,6 @@ void RTSPRequest::setFilename() {
 }
 
 string RTSPRequest::getCreationTimeString() {
-  // TODO : this should be done when the session is created
-
   string timeString;
   timeval ctime;
   gettimeofday(&ctime,NULL);
@@ -92,26 +100,24 @@ string RTSPRequest::getCreationTimeString() {
   return timeString;
 }
 
-string RTSPRequest::getIPAddress() {
-  // TODO : this sholud be modified
-
+void RTSPRequest::setSrcIPAddress() {
   int count=0;
   string::iterator iter1, iter2;
   for(auto iter = request_URI.begin() ; iter != request_URI.end() ; iter++) {
     if(*iter == '/') {
       count++;
       if(count==2) {
-        iter1 = ++iter;
-        --iter;
+        iter1 = next(iter);
+        continue;
       }
     }
-    if(*iter == ':' && count==2) {
+    if((*iter == ':' || *iter == '/') && count==2) {
       iter2 = iter;
       break;
     }
   }
 
-  return string(iter1, iter2);
+  srcIPAddress = string(iter1, iter2);
 }
 
 string RTSPRequest::getSDPDescription() {
@@ -119,17 +125,20 @@ string RTSPRequest::getSDPDescription() {
   string sdpd("");
 
   sdpd += "v=0\r\n";
-  sdpd += "o=- " + getCreationTimeString() + " 1 IN IP4 " + getIPAddress() + "\r\n";
+  sdpd += "o=- " + getCreationTimeString() + " 1 IN IP4 " + srcIPAddress + "\r\n";
   sdpd += "s=Session streamed by \"KimchiMediaServer\"\r\n";
   sdpd += "i=" + filename + "\r\n";
   sdpd += "t=0 0\r\n";
   sdpd += "a=tool:Kimchi Streaming Media\r\n";
   sdpd += "a=type:broadcast\r\n";
   sdpd += "a=control:*\r\n";
-  sdpd += "a=range:npt=0-x.xxx (TODO)\r\n"; // TODO
-  sdpd += "a=x-qt-text-nam:Session streamed by \"KimchiMediaServer\"\r\n";
-  sdpd += "a=x-qt-text-inf:" + filename + "\r\n";
-  sdpd += "H2 drives his hydrogen_bus in Project1 (TODO)\r\n";
+  sdpd += "a=range:npt=0-x.xxx (TODO)\r\n"; // TODO : get maxRange from video file
+  // sdpd += "a=x-qt-text-nam:Session streamed by \"KimchiMediaServer\"\r\n";
+  // sdpd += "a=x-qt-text-inf:" + filename + "\r\n";
+  sdpd += "m=video 0 RTP/AVP 33\r\n"; // payload type of TS files = 33
+  sdpd += "c=IN IP4 0.0.0.0\r\n";
+  // sdpd += "b = XX:XXX\r\n"; // estimates bandwidth from video file
+  sdpd += "a=control:track1\r\n";
 
   return sdpd;
 }
@@ -158,20 +167,44 @@ string RTSPRequest::getResponse() {
     ret += getSDPDescription();  
   }
   else if(method == "SETUP") {
-    // TODO
+    string transPort, preTransport, clientPort;
+    string::iterator iter1, iter2;
+    transPort = headers["Transport"];
+
+    int count=0;
+    for(auto iter = transPort.begin() ; iter != transPort.end() ; iter++) {
+      if(*iter == ';') count++;
+      if(count==2) {
+        iter1 = iter;
+        iter2 = next(iter);
+        break;
+      }
+    }
+    preTransport = string(transPort.begin(), iter1);
+    clientPort = string(iter2, transPort.end());
+    
+    ret += "Transport: " + preTransport;
+    ret += ";" + dstIPAddress + ";" + srcIPAddress + ";" + clientPort + ";" + serverPort + "\r\n";
+    ret += "Session: " + session + ";timeout=" + timeout + "\r\n";
+    ret += "\r\n";
   }
   else if(method == "TEARDOWN") {
     ret += "\r\n";
   }
   else if(method == "PLAY") {
-    // TODO
+    ret += "Range: " + headers["Range"] + "\r\n";
+    ret += "Session: " + session + "\r\n";
+    // TODO : RTP-Info
+    ret += "\r\n";
   }
   else if(method == "PAUSE") {
-    ret += "Session: " + headers["Session"];
+    ret += "Session: " + headers["Session"] + "\r\n";
     ret += "\r\n";
   }
   else if(method == "GET_PARAMETER") {
-    // TODO
+    ret += session + "\r\n";
+    // TODO : Content-length \r\n\r\n Content
+    ret += "\r\n";
   }
   else if(method == "SET_PARAMETER") {
     // this is not necessary
@@ -199,8 +232,9 @@ int main() {
     "Method : %s\n"
     "Request-URI : %s\n"
     "RTSP-Version : %s\n"
-    "filename : %s\n", 
-    r.method.c_str(), r.request_URI.c_str(), r.RTSP_version.c_str(), r.filename.c_str());
+    "filename : %s\n"
+    "source IPAddress : %s\n",
+    r.method.c_str(), r.request_URI.c_str(), r.RTSP_version.c_str(), r.filename.c_str(), r.srcIPAddress.c_str());
   
   map<string,string>::iterator iter;
   for(iter=r.headers.begin() ; iter != r.headers.end() ; iter++) {
