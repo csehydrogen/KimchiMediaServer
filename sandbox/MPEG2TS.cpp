@@ -57,9 +57,9 @@ void MPEG2TS::parsetsx() {
         unsigned tpn = *(unsigned*)(&buf[7]);
         if (rt == 0x89 || rt == 0x8F) {
             iframe[pcr] = tpn;
-            printf("%f %d\n", pcr, tpn);
         }
     }
+    iframe[0.0] = 0;
     duration = pcr;
 }
 
