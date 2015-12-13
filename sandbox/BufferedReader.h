@@ -10,5 +10,6 @@ public:
     BufferedReader(int _fd, int _sz = 4096);
     ~BufferedReader();
     ssize_t read(char *usrbuf, size_t n);
+    ssize_t readn(char *usrbuf, size_t n);
     ssize_t readline(char *usrbuf, size_t maxlen);
 };

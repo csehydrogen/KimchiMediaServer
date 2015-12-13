@@ -16,6 +16,9 @@ public:
     void setVersion(char *ptr);
     void addHeaders(char *key, char *val);
 
+    std::string getMethod();
+    std::string getFilepath();
+
     std::string getResponse();
 
     std::string getCreationTimestring();

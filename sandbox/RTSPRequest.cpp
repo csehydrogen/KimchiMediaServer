@@ -55,6 +55,14 @@ void RTSPRequest::addHeaders(char *key, char *val) {
     headers[std::string(key)] = std::string(val);
 }
 
+std::string RTSPRequest::getMethod() {
+    return method;
+}
+
+std::string RTSPRequest::getFilepath() {
+    return filepath;
+}
+
 std::string RTSPRequest::getResponse() {
     std::string ret;
 

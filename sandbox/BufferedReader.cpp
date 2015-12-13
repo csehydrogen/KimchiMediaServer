@@ -32,6 +32,23 @@ ssize_t BufferedReader::read(char *usrbuf, size_t n) {
     return n;
 }
 
+ssize_t BufferedReader::readn(char *usrbuf, size_t n) {
+    int remain = n;
+    while (remain > 0) {
+        int res = read(usrbuf, remain);
+        if (res < 0) {
+            return -1;
+        } else if (res == 0) {
+            break;
+        } else {
+            usrbuf += res;
+            remain -= res;
+        }
+    }
+
+    return n - remain;
+}
+
 ssize_t BufferedReader::readline(char *usrbuf, size_t maxlen) {
     int n, rc;
     char c, *cur = usrbuf;

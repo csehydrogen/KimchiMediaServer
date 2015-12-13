@@ -1,6 +1,7 @@
 #include "RTSPServer.h"
 #include "RTSPParser.h"
 #include "RTSPRequest.h"
+#include "MPEG2TS.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -67,8 +68,7 @@ void* RTSPServer::parseLoop(void *arg) {
 
     RTSPRequest *rtspRequest = rtspParser->parse();
 
-    std::string res = rtspRequest->getResponse();
-    write(STDOUT_FILENO, res.c_str(), res.length());
+    // TODO
 
     delete rtspRequest;
     delete rtspParser;
