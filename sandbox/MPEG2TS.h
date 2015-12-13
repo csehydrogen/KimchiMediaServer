@@ -15,4 +15,6 @@ public:
     double getDuration();
     bool open(char const *fp);
     void parsetsx();
+    void seekByNpt(double npt);
+    int getFrame(unsigned char *buf);
 };

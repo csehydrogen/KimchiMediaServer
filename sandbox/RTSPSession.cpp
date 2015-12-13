@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <arpa/inet.h>
 
-RTSPSession::RTSPSession() : rtpfd(-1), rtcpfd(-1), port(0) {}
+RTSPSession::RTSPSession() : rtpfd(-1), rtcpfd(-1), port(0), seqnum(0), timestamp(0), isPlaying(false) {}
 
 RTSPSession::~RTSPSession() {
     clear();
@@ -22,8 +22,22 @@ char* RTSPSession::getKey() {
     return key;
 }
 
+int RTSPSession::getSeqnum() {
+    return seqnum;
+}
+
+int RTSPSession::getTimestamp() {
+    return timestamp;
+}
+
 void RTSPSession::setPort(int _port) {
     port = _port;
+}
+
+void RTSPSession::setClientAddr(char const *ip, int port) {
+    sa_cli.sin_family = AF_INET;
+    inet_pton(AF_INET, ip, &sa_cli.sin_addr);
+    sa_cli.sin_port = htons(port);
 }
 
 void RTSPSession::clear() {
@@ -89,8 +103,40 @@ bool RTSPSession::setup(int port) {
 }
 
 void RTSPSession::generateKey() {
-    srand(time(NULL));
     for (int i = 0; i < KEYLEN; ++i)
         key[i] = 'A' + rand() % 26;
     key[KEYLEN] = '\0';
+    ssrc = rand();
+}
+
+bool RTSPSession::setTS(char const *fp) {
+    if (ts.open(fp)) {
+        ts.parsetsx();
+        return true;
+    }
+    return false;
+}
+
+void RTSPSession::setPlay(double startNptTime) {
+    ts.seekByNpt(startNptTime);
+    isPlaying = true;
+}
+
+void RTSPSession::play() {
+    if (!isPlaying) return;
+    unsigned char p[200];
+    p[0] = 0x80;
+    p[1] = 0x21;
+    *(unsigned short*)(p + 2) = htons(seqnum);
+    *(unsigned int*)(p + 4) = htonl(timestamp);
+    *(unsigned int*)(p + 8) = htonl(ssrc);
+    if (ts.getFrame(p + 12) == 0) {
+        isPlaying = false;
+    } else {
+        if (sendto(rtpfd, p, 200, 0, (sockaddr*)&sa_cli, sizeof(sa_cli)) == -1) {
+            perror("ERROR on sendto");
+            return;
+        }
+        ++seqnum;
+    }
 }

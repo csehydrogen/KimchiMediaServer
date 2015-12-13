@@ -12,4 +12,5 @@ public:
     ssize_t read(char *usrbuf, size_t n);
     ssize_t readn(char *usrbuf, size_t n);
     ssize_t readline(char *usrbuf, size_t maxlen);
+    off_t seek(off_t offset, int whence);
 };

@@ -3,7 +3,6 @@
 #include "RTSPRequest.h"
 #include "RTSPResponse.h"
 #include "MPEG2TS.h"
-#include "RTSPSession.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -24,6 +23,18 @@ void RTSPServer::setNextRTPport(int _nextRTPport) {
 
 int RTSPServer::getNextRTPport() {
     return nextRTPport;
+}
+
+void RTSPServer::addSession(char const *key, RTSPSession *s) {
+    sessions[key] = s;
+}
+
+RTSPSession* RTSPServer::getSession(std::string key) {
+    return sessions[key];
+}
+
+std::map<std::string, RTSPSession*>& RTSPServer::getSessions() {
+    return sessions;
 }
 
 bool RTSPServer::startListen() {
@@ -53,14 +64,18 @@ bool RTSPServer::startListen() {
 }
 
 void RTSPServer::acceptLoop() {
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, sendLoop, this)) {
+        perror("ERROR on pthread_create sendLoop");
+        return;
+    }
     while (true) {
         RTSPParser *rtspParser = new RTSPParser(this);
         if (!rtspParser->acceptClient(listenfd))
             return;
 
-        pthread_t thread;
         if (pthread_create(&thread, NULL, parseLoop, rtspParser)) {
-            perror("ERROR on pthread_create");
+            perror("ERROR on pthread_create parseLoop");
             delete rtspParser;
             return;
         }
@@ -94,19 +109,30 @@ void* RTSPServer::parseLoop(void *arg) {
                 rtspParser->write(res.c_str(), res.length());
             }
         } else if (method == "SETUP") {
-            RTSPSession s;
-            if (s.setup(rtspServer->getNextRTPport())) {
-                s.generateKey();
-                rtspServer->setNextRTPport(s.getPort() + 2);
+            RTSPSession *s = new RTSPSession();
+            if (s->setup(rtspServer->getNextRTPport())) {
+                rtspServer->setNextRTPport(s->getPort() + 2);
+                s->generateKey();
+                s->setTS(rtspRequest->getFilepath().c_str());
+                s->setClientAddr(rtspParser->getClientIP(), rtspRequest->getClientRTPPort());
+                rtspServer->addSession(s->getKey(), s);
 
                 std::string res = rtspResponse.getSETUP(
                     rtspParser->getClientIP(),
-                    s.getPort(),
-                    s.getPort() + 1,
-                    s.getKey()
+                    s->getPort(),
+                    s->getPort() + 1,
+                    s->getKey()
                 );
                 rtspParser->write(res.c_str(), res.length());
             }
+        } else if (method == "PLAY") {
+            RTSPSession *s = rtspServer->getSession(rtspRequest->getHeader("Session"));
+            double startNptTime = rtspRequest->getStartNptTime();
+
+            std::string res = rtspResponse.getPLAY(0.0, s->getSeqnum(), s->getTimestamp());
+            rtspParser->write(res.c_str(), res.length());
+
+            s->setPlay(startNptTime);
         }
 
         delete rtspRequest;
@@ -115,4 +141,15 @@ void* RTSPServer::parseLoop(void *arg) {
     delete rtspParser;
 
     return NULL;
+}
+
+void* RTSPServer::sendLoop(void *arg) {
+    RTSPServer *server = (RTSPServer*)arg;
+    auto &sessions = server->getSessions();
+    while (true) {
+        usleep(1000);
+        for (auto it = sessions.begin(); it != sessions.end(); ++it) {
+            it->second->play();
+        }
+    }
 }

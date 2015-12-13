@@ -22,15 +22,15 @@ char const * RTSPParser::getClientIP() {
 }
 
 bool RTSPParser::acceptClient(int listenfd) {
-    sockaddr_in cli_addr;
-    socklen_t cli_addr_len = sizeof(cli_addr);
-    connfd = accept(listenfd, (sockaddr*)&cli_addr, &cli_addr_len);
+    sockaddr_in sa_cli;
+    socklen_t cli_addr_len = sizeof(sa_cli);
+    connfd = accept(listenfd, (sockaddr*)&sa_cli, &cli_addr_len);
     if (connfd < 0) {
         perror("ERROR on accept");
         return false;
     }
 
-    inet_ntop(AF_INET, &cli_addr.sin_addr.s_addr, clientIP, sizeof(clientIP));
+    inet_ntop(AF_INET, &sa_cli.sin_addr.s_addr, clientIP, sizeof(clientIP));
 
     br = new BufferedReader(connfd);
 

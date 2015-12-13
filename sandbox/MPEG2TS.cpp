@@ -57,7 +57,23 @@ void MPEG2TS::parsetsx() {
         unsigned tpn = *(unsigned*)(&buf[7]);
         if (rt == 0x89 || rt == 0x8F) {
             iframe[pcr] = tpn;
+            printf("%f %d\n", pcr, tpn);
         }
     }
     duration = pcr;
+}
+
+void MPEG2TS::seekByNpt(double npt) {
+    if (npt < 0) {
+        tsbr->seek(0, SEEK_SET);
+    } else {
+        auto it = iframe.lower_bound(npt);
+        if (it == iframe.end())
+            --it;
+        tsbr->seek(188 * it->second, SEEK_SET);
+    }
+}
+
+int MPEG2TS::getFrame(unsigned char *buf) {
+    return tsbr->readn((char*)buf, 188);
 }

@@ -69,3 +69,7 @@ ssize_t BufferedReader::readline(char *usrbuf, size_t maxlen) {
     *cur = 0;
     return n;
 }
+
+off_t BufferedReader::seek(off_t offset, int whence) {
+    return lseek(fd, offset, whence);
+}
