@@ -14,7 +14,7 @@ public:
 	
 	std::string getOPTIONS();
 	std::string getDESCRIBE(double maxRange);
-	std::string getSETUP();
+	std::string getSETUP(char* clientIPAddr, unsigned short serverRTPPort, unsigned short serverRTCPPort, char *sessionKey);
 	std::string getPLAY();
 	std::string getPAUSE();
 	std::string getGET_PARAMETER();

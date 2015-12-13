@@ -1,4 +1,6 @@
 #include "RTSPRequest.h"
+#include <cstdlib>
+#include <cstring>
 
 void RTSPRequest::setMethod(char *ptr) {
     method = std::string(ptr);
@@ -50,6 +52,37 @@ void RTSPRequest::setVersion(char *ptr) {
 
 void RTSPRequest::addHeaders(char *key, char *val) {
     headers[std::string(key)] = std::string(val);
+    
+    if(method == "SETUP" && strcmp(key,"Transport") == 0) {
+        int n = strlen(val);
+        int loc0=0, loc1=0, loc2=n;
+        for(int i=0 ; i<n ; i++) {
+            if(val[i]=='=') {
+                loc0 = i+1;
+                break;
+            }
+        }
+        
+        for(int i=loc0 ; i<n ; i++) {
+            if(val[i]=='-') {
+                loc1 = i;
+                break;
+            }
+        }
+        
+        for(int i=loc1 ; i<n ; i++) {
+            if(val[i]==';') {
+                loc2 = i;
+                break;
+            }
+        }
+        
+        std::string rtpPort(val+loc0, val+loc1);
+        std::string rtcpPort(val+loc1+1, val+loc2);
+        
+        clientRTPPort = (unsigned short)atoi(rtpPort.c_str());
+        clientRTCPPort = (unsigned short)atoi(rtcpPort.c_str());
+    }
 }
 
 std::string RTSPRequest::getMethod() { 
@@ -78,6 +111,14 @@ std::map<std::string, std::string> RTSPRequest::getHeadersAll() {
 
 std::string RTSPRequest::getHeader(const char *key) {
     return headers[std::string(key)];
+}
+
+unsigned short RTSPRequest::getClientRTPPort() {
+    return clientRTPPort;
+}
+
+unsigned short RTSPRequest::getClientRTCPPort() {
+    return clientRTCPPort;
 }
 
 void RTSPRequest::printLog() {

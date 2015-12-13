@@ -31,13 +31,27 @@ std::string RTSPResponse::getDESCRIBE(double maxRange = -1.0) {
     return ret;   
 }
 
-std::string RTSPResponse::getSETUP() {
+std::string RTSPResponse::getSETUP(char* clientIPAddr, unsigned short serverRTPPort, unsigned short serverRTCPPort, char *sessionKey) {
     std::string ret(common);
+    std::string transport, preTransport;
     
-    // TODO
-    // Transport
-    // Session
+    transport = rtspRequest->getHeader("Transport");
+    int count=0;
+    for(auto iter = transport.begin() ; iter != transport.end() ; iter++) {
+        if(*iter == ';') count++;
+        if(count==2) {
+            preTransport = std::string(transport.begin(), iter);
+            break;
+        }
+    }
     
+    ret += "Transport: " + preTransport
+            + ";destination=" + clientIPAddr
+            + ";source=" + rtspRequest->getSrcIPAddr()
+            + ";client_port=" + std::to_string(rtspRequest->getClientRTPPort()) + "-" + std::to_string(rtspRequest->getClientRTCPPort())
+            + ";server_port=" + std::to_string(serverRTPPort) + "-" + std::to_string(serverRTCPPort) + "\r\n"
+            + "Session: " + sessionKey + "\r\n\r\n";  
+            
     return ret;    
 }
 

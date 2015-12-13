@@ -6,6 +6,7 @@
 class RTSPRequest {
     std::string method, url, filepath, srcIPAddr, version;
     std::map<std::string, std::string> headers;
+    unsigned short clientRTPPort, clientRTCPPort;
 
 public:
     void setMethod(char *ptr);
@@ -20,6 +21,9 @@ public:
     std::string getVersion();
     std::map<std::string, std::string> getHeadersAll();
     std::string getHeader(const char *key);
+    
+    unsigned short getClientRTPPort();
+    unsigned short getClientRTCPPort();
 
     void printLog();
 };
