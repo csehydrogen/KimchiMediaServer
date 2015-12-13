@@ -2,6 +2,12 @@
 #include <cstdlib>
 #include <cstring>
 
+RTSPRequest::RTSPRequest() {
+    startNptTime = -1.0;
+}
+
+RTSPRequest::~RTSPRequest() { }
+
 void RTSPRequest::setMethod(char *ptr) {
     method = std::string(ptr);
 }
@@ -83,6 +89,25 @@ void RTSPRequest::addHeaders(char *key, char *val) {
         clientRTPPort = (unsigned short)atoi(rtpPort.c_str());
         clientRTCPPort = (unsigned short)atoi(rtcpPort.c_str());
     }
+    else if(method == "PLAY" && strcmp(key,"Range") == 0) {
+        int n =strlen(val);
+        int loc0=0, loc1=n;
+        for(int i=0 ; i<n ; i++) {
+            if(val[i] == '=') {
+                loc0 = i+1;
+                break;
+            }
+        }
+        for(int i=loc0 ; i<n ; i++) {
+            if(val[i]=='-') {
+                loc1 = i;
+                break;
+            }
+        }
+        
+        std::string npt(val+loc0, val+loc1);
+        startNptTime = atof(npt.c_str());
+    }
 }
 
 std::string RTSPRequest::getMethod() { 
@@ -119,6 +144,10 @@ unsigned short RTSPRequest::getClientRTPPort() {
 
 unsigned short RTSPRequest::getClientRTCPPort() {
     return clientRTCPPort;
+}
+
+double RTSPRequest::getStartNptTime() {
+    return startNptTime;
 }
 
 void RTSPRequest::printLog() {

@@ -55,14 +55,12 @@ std::string RTSPResponse::getSETUP(char const *clientIPAddr, unsigned short serv
     return ret;    
 }
 
-std::string RTSPResponse::getPLAY() {
+std::string RTSPResponse::getPLAY(double startNpt, unsigned short seq, unsigned int rtptime) {
     std::string ret(common);
     
-    // TODO
-    // range
-    // session
-    // RTP-INFO: url=~~~;seq=~~~;rtptime=~~~\r\n
-    // \r\n
+    ret += "Range: npt=" + std::to_string(startNpt) + "-\r\n"
+            + "Session: " + rtspRequest->getHeader("Session") + "\r\n"
+            + "RTP-INFO: url=" + rtspRequest->getUrl() + "track1;seq=" + std::to_string(seq) + ";rtptime=" + std::to_string(rtptime) + "\r\n\r\n";
     
     return ret;
 }
