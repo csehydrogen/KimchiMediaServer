@@ -15,6 +15,10 @@ MPEG2TS::~MPEG2TS() {
     close(tsxfd);
 }
 
+double MPEG2TS::getDuration() {
+    return duration;
+}
+
 bool MPEG2TS::open(char const *fp) {
     char buf[256];
     strcpy(buf, fp);

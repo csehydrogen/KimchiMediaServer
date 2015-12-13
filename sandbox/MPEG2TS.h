@@ -12,6 +12,7 @@ class MPEG2TS {
 public:
     MPEG2TS();
     ~MPEG2TS();
+    double getDuration();
     bool open(char const *fp);
     void parsetsx();
 };

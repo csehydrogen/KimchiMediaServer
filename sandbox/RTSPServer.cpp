@@ -1,6 +1,7 @@
 #include "RTSPServer.h"
 #include "RTSPParser.h"
 #include "RTSPRequest.h"
+#include "RTSPResponse.h"
 #include "MPEG2TS.h"
 
 #include <unistd.h>
@@ -44,7 +45,7 @@ bool RTSPServer::startListen() {
 
 void RTSPServer::acceptLoop() {
     while (true) {
-        RTSPParser *rtspParser = new RTSPParser();
+        RTSPParser *rtspParser = new RTSPParser(this);
         if (!rtspParser->acceptClient(listenfd))
             return;
 
@@ -66,11 +67,30 @@ void* RTSPServer::parseLoop(void *arg) {
         return NULL;
     }
 
-    RTSPRequest *rtspRequest = rtspParser->parse();
+    RTSPServer *rtspServer = rtspParser->getServer();
 
-    // TODO
+    while(true) {
+        RTSPRequest *rtspRequest = rtspParser->parse();
+        RTSPResponse rtspResponse(rtspRequest);
 
-    delete rtspRequest;
+        std::string method = rtspRequest->getMethod();
+        if (method == "OPTIONS") {
+            std::string res = rtspResponse.getOPTIONS();
+            rtspParser->write(res.c_str(), res.length());
+        } else if (method == "DESCRIBE") {
+            MPEG2TS v;
+            v.open(rtspRequest->getFilepath().c_str());
+            v.parsetsx();
+            std::string res = rtspResponse.getDESCRIBE(v.getDuration());
+            rtspParser->write(res.c_str(), res.length());
+        } else {
+            // TODO
+        }
+
+        delete rtspRequest;
+    }
+
     delete rtspParser;
+
     return NULL;
 }

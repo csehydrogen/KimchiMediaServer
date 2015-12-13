@@ -5,11 +5,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-RTSPParser::RTSPParser() : connfd(-1), br(NULL) {}
+RTSPParser::RTSPParser(RTSPServer *_server) : server(_server), connfd(-1), br(NULL) {}
 
 RTSPParser::~RTSPParser() {
     close(connfd);
     delete br;
+}
+
+RTSPServer* RTSPParser::getServer() {
+    return server;
 }
 
 bool RTSPParser::acceptClient(int listenfd) {
@@ -48,4 +52,8 @@ RTSPRequest* RTSPParser::parse() {
     }
 
     return rtspRequest;
+}
+
+void RTSPParser::write(void const *str, size_t len) {
+    ::write(connfd, str, len);
 }
