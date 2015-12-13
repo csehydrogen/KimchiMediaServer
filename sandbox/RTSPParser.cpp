@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 RTSPParser::RTSPParser(RTSPServer *_server) : server(_server), connfd(-1), br(NULL) {}
 
@@ -16,6 +17,10 @@ RTSPServer* RTSPParser::getServer() {
     return server;
 }
 
+char const * RTSPParser::getClientIP() {
+    return clientIP;
+}
+
 bool RTSPParser::acceptClient(int listenfd) {
     sockaddr_in cli_addr;
     socklen_t cli_addr_len = sizeof(cli_addr);
@@ -24,6 +29,8 @@ bool RTSPParser::acceptClient(int listenfd) {
         perror("ERROR on accept");
         return false;
     }
+
+    inet_ntop(AF_INET, &cli_addr.sin_addr.s_addr, clientIP, sizeof(clientIP));
 
     br = new BufferedReader(connfd);
 

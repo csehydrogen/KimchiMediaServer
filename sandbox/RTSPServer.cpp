@@ -3,6 +3,7 @@
 #include "RTSPRequest.h"
 #include "RTSPResponse.h"
 #include "MPEG2TS.h"
+#include "RTSPSession.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -10,11 +11,19 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-RTSPServer::RTSPServer(int _port, int _backlog)
-    : port(_port), backlog(_backlog), listenfd(-1) {}
+RTSPServer::RTSPServer(int _port, int _backlog, int _nextRTPport)
+    : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_nextRTPport) {}
 
 RTSPServer::~RTSPServer() {
     close(listenfd);
+}
+
+void RTSPServer::setNextRTPport(int _nextRTPport) {
+    nextRTPport = _nextRTPport;
+}
+
+int RTSPServer::getNextRTPport() {
+    return nextRTPport;
 }
 
 bool RTSPServer::startListen() {
@@ -79,12 +88,25 @@ void* RTSPServer::parseLoop(void *arg) {
             rtspParser->write(res.c_str(), res.length());
         } else if (method == "DESCRIBE") {
             MPEG2TS v;
-            v.open(rtspRequest->getFilepath().c_str());
-            v.parsetsx();
-            std::string res = rtspResponse.getDESCRIBE(v.getDuration());
-            rtspParser->write(res.c_str(), res.length());
-        } else {
-            // TODO
+            if (v.open(rtspRequest->getFilepath().c_str())) {
+                v.parsetsx();
+                std::string res = rtspResponse.getDESCRIBE(v.getDuration());
+                rtspParser->write(res.c_str(), res.length());
+            }
+        } else if (method == "SETUP") {
+            RTSPSession s;
+            if (s.setup(rtspServer->getNextRTPport())) {
+                s.generateKey();
+                rtspServer->setNextRTPport(s.getPort() + 2);
+
+                std::string res = rtspResponse.getSETUP(
+                    rtspParser->getClientIP(),
+                    s.getPort(),
+                    s.getPort() + 1,
+                    s.getKey()
+                );
+                rtspParser->write(res.c_str(), res.length());
+            }
         }
 
         delete rtspRequest;

@@ -31,7 +31,7 @@ std::string RTSPResponse::getDESCRIBE(double maxRange = -1.0) {
     return ret;   
 }
 
-std::string RTSPResponse::getSETUP(char* clientIPAddr, unsigned short serverRTPPort, unsigned short serverRTCPPort, char *sessionKey) {
+std::string RTSPResponse::getSETUP(char const *clientIPAddr, unsigned short serverRTPPort, unsigned short serverRTCPPort, char const *sessionKey) {
     std::string ret(common);
     std::string transport, preTransport;
     
