@@ -117,26 +117,47 @@ bool RTSPSession::setTS(char const *fp) {
     return false;
 }
 
-void RTSPSession::setPlay(double startNptTime) {
+void RTSPSession::seek(double startNptTime) {
     ts.seekByNpt(startNptTime);
+}
+
+void RTSPSession::setPlay() {
     isPlaying = true;
+}
+
+void RTSPSession::setPause() {
+    isPlaying = false;
 }
 
 void RTSPSession::play() {
     if (!isPlaying) return;
-    unsigned char p[200];
+    unsigned char p[12 + 188 * 7];
     p[0] = 0x80;
     p[1] = 0x21;
     *(unsigned short*)(p + 2) = htons(seqnum);
     *(unsigned int*)(p + 4) = htonl(timestamp);
     *(unsigned int*)(p + 8) = htonl(ssrc);
-    if (ts.getFrame(p + 12) == 0) {
-        isPlaying = false;
-    } else {
-        if (sendto(rtpfd, p, 200, 0, (sockaddr*)&sa_cli, sizeof(sa_cli)) == -1) {
+    int i;
+    for (i = 0; i < 7; ++i) {
+        int res = ts.getFrame(p + 12 + 188 * i);
+        if (res == -1) {
+            isPlaying = false;
+            break;
+        } else if (res == -2) {
+            break;
+        } else {
+            timestamp += res;
+        }
+    }
+    if (i > 0) {
+        if (sendto(rtpfd, p, 12 + 188 * i, 0, (sockaddr*)&sa_cli, sizeof(sa_cli)) == -1) {
             perror("ERROR on sendto");
             return;
         }
         ++seqnum;
     }
+}
+
+double RTSPSession::getNpt() {
+    return ts.getNpt();
 }

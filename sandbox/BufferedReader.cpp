@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 
 BufferedReader::BufferedReader(int _fd, int _sz) : fd(_fd), sz(_sz), remain(0) {
     buf = next = new char[sz];
@@ -17,6 +18,7 @@ ssize_t BufferedReader::read(char *usrbuf, size_t n) {
         if (remain < 0) {
             if (errno != EINTR)
                 return -1;
+            printf("interupt!\n");
         } else if (remain == 0) {
             return 0;
         } else {
@@ -71,5 +73,7 @@ ssize_t BufferedReader::readline(char *usrbuf, size_t maxlen) {
 }
 
 off_t BufferedReader::seek(off_t offset, int whence) {
+    remain = 0;
+    next = buf;
     return lseek(fd, offset, whence);
 }

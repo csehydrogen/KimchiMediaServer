@@ -95,6 +95,8 @@ void* RTSPServer::parseLoop(void *arg) {
 
     while(true) {
         RTSPRequest *rtspRequest = rtspParser->parse();
+        if (rtspRequest == NULL)
+            break;
         RTSPResponse rtspResponse(rtspRequest);
 
         std::string method = rtspRequest->getMethod();
@@ -128,11 +130,22 @@ void* RTSPServer::parseLoop(void *arg) {
         } else if (method == "PLAY") {
             RTSPSession *s = rtspServer->getSession(rtspRequest->getHeader("Session"));
             double startNptTime = rtspRequest->getStartNptTime();
+            s->seek(startNptTime);
 
-            std::string res = rtspResponse.getPLAY(0.0, s->getSeqnum(), s->getTimestamp());
+            std::string res = rtspResponse.getPLAY(s->getNpt(), s->getSeqnum(), s->getTimestamp());
             rtspParser->write(res.c_str(), res.length());
 
-            s->setPlay(startNptTime);
+            s->setPlay();
+        } else if (method == "PAUSE") {
+            RTSPSession *s = rtspServer->getSession(rtspRequest->getHeader("Session"));
+
+            std::string res = rtspResponse.getPAUSE();
+            rtspParser->write(res.c_str(), res.length());
+
+            s->setPause();
+        } else if (method == "TEARDOWN") {
+            std::string res = rtspResponse.getTEARDOWN();
+            rtspParser->write(res.c_str(), res.length());
         }
 
         delete rtspRequest;

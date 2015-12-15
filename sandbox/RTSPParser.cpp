@@ -43,6 +43,7 @@ RTSPRequest* RTSPParser::parse() {
     RTSPRequest *rtspRequest = new RTSPRequest();
 
     n = br->readline(line, sizeof(line));
+    if (n == 0) return NULL;
     ptr = strtok_r(line, " ", &saveptr);
     rtspRequest->setMethod(ptr);
     ptr = strtok_r(NULL, " ", &saveptr);

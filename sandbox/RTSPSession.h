@@ -24,6 +24,9 @@ public:
     bool setup(int nextRTPport);
     void generateKey();
     bool setTS(char const *fp);
-    void setPlay(double startNptTime);
+    void seek(double startNptTime);
+    void setPlay();
+    void setPause();
     void play();
+    double getNpt();
 };
