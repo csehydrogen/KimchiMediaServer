@@ -15,7 +15,7 @@ RTSPResponse::~RTSPResponse() { }
 std::string RTSPResponse::getOPTIONS() {
     std::string ret(common);
     
-    ret += "Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER\r\n\r\n";
+    ret += "Public: OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER, REDIRECT\r\n\r\n";
     return ret;
 }
 
@@ -86,6 +86,17 @@ std::string RTSPResponse::getTEARDOWN() {
     std::string ret(common);
     
     ret += "\r\n";
+    
+    return ret;
+}
+
+std::string RTSPResponse::getREDIRECT(const char *ip, unsigned short port, const char *filepath) {
+    std::string ret;
+    
+    ret = "RTSP/1.0 301 Moved Permanently\r\n";
+    ret += "Location: rtsp://" + std::string(ip) + ":" 
+            + std::to_string(port) + "/" 
+            + std::string(filepath) + "\r\n\r\n";
     
     return ret;
 }

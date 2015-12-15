@@ -19,6 +19,7 @@ public:
 	std::string getPAUSE();
 	std::string getGET_PARAMETER();
 	std::string getTEARDOWN();
+	std::string getREDIRECT(const char *ip, unsigned short port, const char *filepath);
    
     std::string getResponse();
     std::string getCreationTimeString();
