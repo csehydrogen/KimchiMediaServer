@@ -20,6 +20,7 @@ public:
     MPEG2TS();
     ~MPEG2TS();
     double getDuration();
+    double getSize(); // byte
     bool open(char const *fp);
     void parsetsx();
     bool seekByNpt(double npt);

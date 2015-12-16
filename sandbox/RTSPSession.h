@@ -6,7 +6,7 @@
 
 class RTSPSession {
     int rtpfd, rtcpfd, port, seqnum, timestamp, ssrc;
-    bool isPlaying;
+    bool isPlaying, isTeardown;
     static int const KEYLEN = 8;
     char key[KEYLEN + 1];
     MPEG2TS ts;
@@ -27,6 +27,8 @@ public:
     void seek(double startNptTime);
     void setPlay();
     void setPause();
+    void setTeardown();
+    bool getTeardown();
     void play();
     double getNpt();
 };

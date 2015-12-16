@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-RTSPSession::RTSPSession() : rtpfd(-1), rtcpfd(-1), port(0), seqnum(0), timestamp(0), isPlaying(false) {}
+RTSPSession::RTSPSession() : rtpfd(-1), rtcpfd(-1), port(0), seqnum(0), timestamp(0), isPlaying(false), isTeardown(false) {}
 
 RTSPSession::~RTSPSession() {
     clear();
@@ -127,6 +127,15 @@ void RTSPSession::setPlay() {
 
 void RTSPSession::setPause() {
     isPlaying = false;
+}
+
+void RTSPSession::setTeardown() {
+    isPlaying = false;
+    isTeardown = true;
+}
+
+bool RTSPSession::getTeardown() {
+    return isTeardown;
 }
 
 void RTSPSession::play() {

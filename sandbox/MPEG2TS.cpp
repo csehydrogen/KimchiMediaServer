@@ -19,6 +19,10 @@ double MPEG2TS::getDuration() {
     return duration;
 }
 
+double MPEG2TS::getSize() {
+    return pcrs.size() * 188;
+}
+
 bool MPEG2TS::open(char const *fp) {
     char buf[256];
     strcpy(buf, fp);
