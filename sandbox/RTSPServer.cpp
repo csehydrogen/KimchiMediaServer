@@ -3,6 +3,7 @@
 #include "RTSPRequest.h"
 #include "RTSPResponse.h"
 #include "MPEG2TS.h"
+#include "NodeStatus.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -12,6 +13,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <string.h>
 
 RTSPServer::RTSPServer(char const *_ip, int _port, int _backlog)
     : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1) {
@@ -355,11 +357,14 @@ void* RTSPServer::sendDataLoop(void *arg) {
     RTSPServer *server = (RTSPServer*)arg;
     int mfd = server->getMfd();
     // TODO substitute with real values
+    
+    NodeStatus nodeStatus;
+    
     char buf[28];
     *(int*)(buf + 0) = 0;
-    *(double*)(buf + 4) = 1000.0;
-    *(double*)(buf + 12) = 0.5;
-    *(double*)(buf + 20) = 0.5;
+    *(double*)(buf + 4) = 1000; // bandwidth
+    *(double*)(buf + 12) = nodeStatus.getUsageMemRatio(); // memoryUsageRatio
+    *(double*)(buf + 20) = nodeStatus.getCPUUsageRatio(); // CPUUsageRatio
     write(mfd, buf, sizeof(buf));
 
     return NULL;
@@ -395,10 +400,13 @@ void RTSPServer::registerMaster(char const *ip, char const *port) {
     printf("Connected to master %s:%s\n", ip, port);
 
     // TODO substitute with real values
+    
+    NodeStatus nodeStatus;
+    
     char buf[28];
     *(int*)(buf + 0) = 0;
-    *(double*)(buf + 4) = 1000.0;
-    *(double*)(buf + 12) = 0.5;
-    *(double*)(buf + 20) = 0.5;
+    *(double*)(buf + 4) = 0;
+    *(double*)(buf + 12) = nodeStatus.getUsageMemRatio();
+    *(double*)(buf + 20) = nodeStatus.getCPUUsageRatio();
     write(mfd, buf, sizeof(buf));
 }

@@ -13,11 +13,13 @@ public:
 
     void updateCPUStatus();
     double getCPUIdleRatio();
+    double getCPUUsageRatio();
 
     void updateMemStatus();
     long long getTotalMem();
     long long getAvailableMem();
     double getAvailableMemRatio();
+    double getUsageMemRatio();
     long long getInfoMem(const char* key);
-    void printMemLog();
+    void printLog();
 };

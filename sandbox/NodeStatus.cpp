@@ -17,6 +17,7 @@ void NodeStatus::updateCPUStatus() {
     FILE *fp = fopen("/proc/stat", "r");
     if(fp == NULL) {
         perror("/proc/stat NOT Found");
+        idle=1, total=2;
         return;
     }
 
@@ -46,11 +47,16 @@ void NodeStatus::updateCPUStatus() {
 double NodeStatus::getCPUIdleRatio() {
     return (double)idle/total;
 }
+
+double NodeStatus::getCPUUsageRatio() {
+    return 1.0-(double)idle/total;
+}
     
 void NodeStatus::updateMemStatus() {
     FILE *fp = fopen("/proc/meminfo", "r");
     if(fp == NULL) {
         perror("/proc/meminfo NOT Found");
+        mem["MemAvailable"] = 1, mem["MemTotal"] = 2;
         return;
     }
   
@@ -79,6 +85,10 @@ long long NodeStatus::getAvailableMem() {
 
 double NodeStatus::getAvailableMemRatio() {
     return (double)mem["MemAvailable"]/mem["MemTotal"];
+}
+
+double NodeStatus::getUsageMemRatio() {
+    return 1.0-(double)mem["MemAvailable"]/mem["MemTotal"];
 }
 
 long long NodeStatus::getInfoMem(const char *buf) {
