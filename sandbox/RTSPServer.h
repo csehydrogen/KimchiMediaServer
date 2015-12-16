@@ -6,12 +6,12 @@
 #include <map>
 
 class RTSPServer {
-    int port, backlog, listenfd, nextRTPport;
+    int ip, port, backlog, listenfd, nextRTPport;
     std::map<std::string, RTSPSession*> sessions;
     int mfd, sfd;
     std::map<int, Slave*> slaves;
 public:
-    RTSPServer(int _port = 8554, int _backlog = 5);
+    RTSPServer(char const *_ip, int _port, int _backlog = 5);
     ~RTSPServer();
     void setNextRTPport(int _nextRTPport);
     int getNextRTPport();

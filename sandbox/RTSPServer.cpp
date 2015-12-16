@@ -13,8 +13,10 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 
-RTSPServer::RTSPServer(int _port, int _backlog)
-    : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1) {}
+RTSPServer::RTSPServer(char const *_ip, int _port, int _backlog)
+    : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1) {
+        inet_pton(AF_INET, _ip, &ip);
+}
 
 RTSPServer::~RTSPServer() {
     close(listenfd);
@@ -67,20 +69,10 @@ bool RTSPServer::startListen() {
         return false;
     }
 
-    ifaddrs *iap;
-    getifaddrs(&iap);
-    ifaddrs *next = iap;
-    while (true) {
-        if (strcmp(next->ifa_name, "en0") == 0 &&
-            (next->ifa_next == NULL || strcmp(next->ifa_next->ifa_name, "en0") != 0))
-            break;
-        next = next->ifa_next;
-    }
     sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = ((sockaddr_in*)(next->ifa_addr))->sin_addr.s_addr;
+    serv_addr.sin_addr.s_addr = ip;
     serv_addr.sin_port = htons(port);
-    freeifaddrs(iap);
 
     if (bind(listenfd, (sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("ERROR on bind");
