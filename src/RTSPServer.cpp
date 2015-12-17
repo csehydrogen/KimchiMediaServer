@@ -243,6 +243,7 @@ void* RTSPServer::parseLoop(void *arg) {
                     rtspParser->write(res.c_str(), res.length());
                     
                     rtspServer->addBW(s->getTS()->getSize(), s->getTS()->getDuration());
+                    printf("%s requested\n", rtspRequest->getFilepath().c_str());
                 }
             }
         } else if (method == "PLAY") {
