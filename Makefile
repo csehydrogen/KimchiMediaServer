@@ -1,15 +1,12 @@
-INCLUDE_DIR = /usr/local/include
-INCLUDES = -I$(INCLUDE_DIR)/UsageEnvironment -I$(INCLUDE_DIR)/groupsock -I$(INCLUDE_DIR)/liveMedia -I$(INCLUDE_DIR)/BasicUsageEnvironment
-COMPILE_OPTS = -c $(INCLUDES)
+COMPILE_OPTS = -std=c++11 -c -g
 COMPILER = c++
 COMPILE = $(COMPILER) $(COMPILE_OPTS)
 
-LIB_DIR = /usr/local/lib
-LIBS = -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment
+LIBS = RTSPServer.o RTSPParser.o RTSPRequest.o RTSPResponse.o BufferedReader.o MPEG2TS.o RTSPSession.o Slave.o NodeStatus.o
 LINK = c++
 
-KimchiMediaServer : KimchiMediaServer.o
-	$(LINK) -L$(LIB_DIR) -o $@ $< $(LIBS)
+KimchiMediaServer : main.o $(LIBS)
+	$(LINK) -o $@ $^ -pthread
 
 %.o : %.cpp
 	$(COMPILE) $<
