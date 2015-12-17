@@ -30,6 +30,10 @@ int RTSPSession::getTimestamp() {
     return timestamp;
 }
 
+MPEG2TS* RTSPSession::getTS() {
+    return &ts;
+}
+
 void RTSPSession::setPort(int _port) {
     port = _port;
 }

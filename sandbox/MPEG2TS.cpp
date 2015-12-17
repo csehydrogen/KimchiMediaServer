@@ -61,6 +61,7 @@ void MPEG2TS::parsetsx() {
         unsigned pcr_frac = buf[6];
         pcr = pcr_int + pcr_frac / 256.0;
         unsigned tpn = *(unsigned*)(&buf[7]);
+        // if(true) {
         if (rt == 0x89 || rt == 0x8F) {
             iframe[pcr] = tpn;
         }
@@ -69,7 +70,7 @@ void MPEG2TS::parsetsx() {
         }
     }
     iframe[0.0] = 0;
-    duration = pcr;
+    duration = pcr;    
 }
 
 bool MPEG2TS::seekByNpt(double npt) {

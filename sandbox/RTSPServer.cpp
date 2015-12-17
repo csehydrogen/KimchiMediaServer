@@ -16,7 +16,7 @@
 #include <string.h>
 
 RTSPServer::RTSPServer(char const *_ip, int _port, int _backlog)
-    : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1) {
+    : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1), totalBW(0) {
         inet_pton(AF_INET, _ip, &ip);
 }
 
@@ -42,6 +42,10 @@ int RTSPServer::getSfd() {
 
 std::map<int, Slave*>& RTSPServer::getSlaves() {
     return slaves;
+}
+
+double RTSPServer::getTotalBW() {
+    return totalBW;
 }
 
 void RTSPServer::addSession(char const *key, RTSPSession *s) {
@@ -93,10 +97,13 @@ bool RTSPServer::startListen() {
     printf("RTSP Server listening at %s:%d\n", clientIP, port);
 
     if (mfd >= 0) {
-        char buf[12];
+        NodeStatus node;
+        
+        char buf[16];
         *(int*)(buf + 0) = 1;
         *(int*)(buf + 4) = serv_addr.sin_addr.s_addr;
         *(int*)(buf + 8) = port;
+        *(int*)(buf + 12) = (int)node.getTotalMem();
         write(mfd, buf, sizeof(buf));
     }
 
@@ -211,6 +218,7 @@ void* RTSPServer::parseLoop(void *arg) {
                             ms = s;
                             mi = i;
                         }
+                        printf("s in this slave = %lf\n", s);
                     }
 
                     std::string res = rtspResponse.getREDIRECT(mi->second->getRTSPip(), mi->second->getRTSPport(), rtspRequest->getFilepath().c_str());
@@ -233,6 +241,8 @@ void* RTSPServer::parseLoop(void *arg) {
                         s->getKey()
                     );
                     rtspParser->write(res.c_str(), res.length());
+                    
+                    rtspServer->addBW(s->getTS()->getSize(), s->getTS()->getDuration());
                 }
             }
         } else if (method == "PLAY") {
@@ -261,8 +271,8 @@ void* RTSPServer::parseLoop(void *arg) {
 
             std::string res = rtspResponse.getTEARDOWN();
             rtspParser->write(res.c_str(), res.length());
-
-            s->setTeardown();
+            
+            rtspServer->addBW(-(double)(s->getTS()->getSize()), s->getTS()->getSize());
         }
 
         delete rtspRequest;
@@ -362,7 +372,7 @@ void* RTSPServer::sendDataLoop(void *arg) {
     
     char buf[28];
     *(int*)(buf + 0) = 0;
-    *(double*)(buf + 4) = 1000; // bandwidth
+    *(double*)(buf + 4) = server->getTotalBW()/1000000000.0; // bandwidth
     *(double*)(buf + 12) = nodeStatus.getUsageMemRatio(); // memoryUsageRatio
     *(double*)(buf + 20) = nodeStatus.getCPUUsageRatio(); // CPUUsageRatio
     write(mfd, buf, sizeof(buf));
@@ -405,8 +415,12 @@ void RTSPServer::registerMaster(char const *ip, char const *port) {
     
     char buf[28];
     *(int*)(buf + 0) = 0;
-    *(double*)(buf + 4) = 0;
-    *(double*)(buf + 12) = nodeStatus.getUsageMemRatio();
+    *(double*)(buf + 4) = totalBW / 1000000000;
+    *(double*)(buf + 12) = (double)nodeStatus.getUsageMemRatio();
     *(double*)(buf + 20) = nodeStatus.getCPUUsageRatio();
     write(mfd, buf, sizeof(buf));
+}
+
+void RTSPServer::addBW(double size, double length) {
+    totalBW += size/length;
 }

@@ -2,6 +2,7 @@
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string.h>
 
 Slave::Slave(int _sfd) : sfd(_sfd), br(_sfd), a(1), b(1), c(1), d(1),
     disconnected(false) {}
@@ -48,13 +49,13 @@ void Slave::setIPandPort(char const *_ip, int _port) {
 }
 
 double Slave::compute(bool allocated, double size, double length) {
-    double BW2 = 1000000000 - BW;
+    double BW2 = 1 - BW;
     double RAM2 = 1 - RAM;
     double CPU2 = 1 - CPU;
     if (allocated) {
-        BW2 -= size / length;
-        RAM2 -= size;
-        CPU2 -= a * CPU + b * RAM + c * size / length + d;
+        BW2 -= size / length / 1000000000;
+        RAM2 -= size / totalMem / 1000;
+        CPU2 -= a * CPU + b * RAM + c * size / length / 1000000000 + d;
     }
     BW2 *= BW2;
     RAM2 *= RAM2;
@@ -73,10 +74,9 @@ bool Slave::readAndUpdate(bool init) {
         double BWn = *(double*)(buf + 0);
         double RAMn = *(double*)(buf + 8);
         double CPUn = *(double*)(buf + 16);
-        printf("from %s:%d, BW=%f RAM=%f CPU=%f\n", ip, port, BWn, RAMn, CPUn);
 
         if (!init) {
-            static double eta = 0.1;
+            static double eta = 0.01;
             double f = CPUn;
             double x = CPU;
             double y = RAM;
@@ -89,7 +89,6 @@ bool Slave::readAndUpdate(bool init) {
             b += db;
             c += dc;
             d += dd;
-            printf("update a=%f b=%f c=%f d=%f\n", a, b, c, d);
         }
 
         BW = BWn;
@@ -100,6 +99,7 @@ bool Slave::readAndUpdate(bool init) {
         br.readn((char*)&iip, sizeof(iip));
         inet_ntop(AF_INET, &iip, RTSPip, sizeof(RTSPip));
         br.readn((char*)&RTSPport, sizeof(RTSPport));
+        br.readn((char*)&totalMem, sizeof(totalMem));
         printf("from %s:%d, RTSP %s:%d\n", ip, port, RTSPip, RTSPport);
     } else {
         printf("from %s:%d, Unknown type %d\n", ip, port, type);

@@ -11,6 +11,7 @@ class Slave {
     double BW, RAM, CPU;
     char ip[16]; int port; char RTSPip[16]; int RTSPport;
     bool disconnected;
+    int totalMem;
 public:
     Slave(int _sfd);
     ~Slave();

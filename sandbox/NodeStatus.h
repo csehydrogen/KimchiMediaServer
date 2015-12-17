@@ -19,6 +19,7 @@ public:
     long long getTotalMem();
     long long getAvailableMem();
     double getAvailableMemRatio();
+    long long getUsageMem();
     double getUsageMemRatio();
     long long getInfoMem(const char* key);
     void printLog();

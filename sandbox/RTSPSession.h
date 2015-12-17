@@ -18,6 +18,7 @@ public:
     char* getKey();
     int getSeqnum();
     int getTimestamp();
+    MPEG2TS* getTS();
     void setPort(int _port);
     void setClientAddr(char const *ip, int port);
     void clear();

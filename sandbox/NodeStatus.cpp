@@ -56,7 +56,7 @@ void NodeStatus::updateMemStatus() {
     FILE *fp = fopen("/proc/meminfo", "r");
     if(fp == NULL) {
         perror("/proc/meminfo NOT Found");
-        mem["MemAvailable"] = 1, mem["MemTotal"] = 2;
+        mem["MemAvailable"] = 2000000, mem["MemTotal"] = 4000000;
         return;
     }
   
@@ -85,6 +85,10 @@ long long NodeStatus::getAvailableMem() {
 
 double NodeStatus::getAvailableMemRatio() {
     return (double)mem["MemAvailable"]/mem["MemTotal"];
+}
+
+long long NodeStatus::getUsageMem() {
+    return mem["MemTotal"] - mem["MemAvailable"];
 }
 
 double NodeStatus::getUsageMemRatio() {

@@ -10,6 +10,7 @@ class RTSPServer {
     std::map<std::string, RTSPSession*> sessions;
     int mfd, sfd;
     std::map<int, Slave*> slaves;
+    double totalBW;
 public:
     RTSPServer(char const *_ip, int _port, int _backlog = 5);
     ~RTSPServer();
@@ -17,6 +18,7 @@ public:
     int getNextRTPport();
     int getMfd();
     int getSfd();
+    double getTotalBW();
     std::map<int, Slave*>& getSlaves();
     void addSession(char const *key, RTSPSession *s);
     void addSlave(int key, Slave *val);
@@ -31,4 +33,5 @@ public:
     static void* clientLoop(void *arg);
     static void* sendDataLoop(void *arg);
     void registerMaster(char const *ip, char const *port);
+    void addBW(double size, double length);
 };
