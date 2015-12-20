@@ -14,6 +14,17 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <string.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+long long getCurrentTime(){
+    timeval startTime;
+    gettimeofday(&startTime, NULL);
+    return 1e+6 * startTime.tv_sec + startTime.tv_usec;
+}
+
+int mycnt[1000];
 
 RTSPServer::RTSPServer(char const *_ip, int _port, int _backlog)
     : port(_port), backlog(_backlog), listenfd(-1), nextRTPport(_port + 2), mfd(-1), totalBW(0) {
@@ -294,7 +305,11 @@ void* RTSPServer::sendLoop(void *arg) {
     auto &sessions = server->getSessions();
     while (true) {
         usleep(1000);
+        long long ini, fin;
+        int n = 0;
+        ini = getCurrentTime();
         for (auto it = sessions.begin(); it != sessions.end(); ++it) {
+            n++;
             if (it->second->getTeardown()) {
                 delete it->second;
                 sessions.erase(it);
@@ -302,6 +317,11 @@ void* RTSPServer::sendLoop(void *arg) {
             } else {
                 it->second->play();
             }
+        }
+        fin = getCurrentTime();
+        if(mycnt[n]<10){
+            mycnt[n]++;
+            printf("currently %d clients. %lld\n", n, fin - ini);
         }
     }
     return NULL;
